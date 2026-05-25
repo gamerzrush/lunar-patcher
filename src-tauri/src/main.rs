@@ -7,6 +7,10 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use chrono::{Utc, Duration};
 use uuid::Uuid;
 
+// --- THIS IS THE MAGIC TOOL TO HIDE POWERSHELL AND FIX THE LAG ---
+use std::os::windows::process::CommandExt;
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Deserialize)]
 struct MojangResponse { id: String }
 
@@ -37,11 +41,11 @@ fn generate_token(uuid: &str, display_name: &str) -> (String, String) {
     (format!("{}.{}.{}", header_b64, payload_b64, dummy_signature), expire_time.format("%Y-%m-%dT%H:%M:%S.000Z").to_string())
 }
 
-// --- HELPER 2: ADD HOSTS PATCH (Waits for UAC) --- //
+// --- HELPER 2: ADD HOSTS PATCH --- //
 fn patch_hosts_file() -> Result<(), String> {
     let hosts_path = "C:\\Windows\\System32\\drivers\\etc\\hosts";
     if let Ok(content) = fs::read_to_string(hosts_path) {
-        if content.contains("api.lunarclient.com") { return Ok(()); } // Already patched
+        if content.contains("api.lunarclient.com") { return Ok(()); }
     }
 
     let domains = vec![
@@ -51,7 +55,6 @@ fn patch_hosts_file() -> Result<(), String> {
         "assetserver.lunarclient.com", "blog.lunarclient.com", "thirdpartycache.lunarclient.com",
         "t.lunarclientcdn.com", "console.lunarclient.com", "store.lunarclient.com", "support.lunarclient.com", 
         "status.lunarclient.com", "cdn.lunarclient.com",
-        // --- Added Microsoft / Xbox Domains ---
         "login.live.com", "user.auth.xboxlive.com", 
         "xsts.auth.xboxlive.com", "api.minecraftservices.com"
     ];
@@ -63,14 +66,15 @@ fn patch_hosts_file() -> Result<(), String> {
     let temp_file = std::env::temp_dir().join("lunar_patch.txt");
     let _ = fs::write(&temp_file, patch_block);
 
-    // Notice we added -Wait and Error checking here!
     let script = format!(
         "try {{ Start-Process cmd -ArgumentList '/c type \"{}\" >> C:\\Windows\\System32\\drivers\\etc\\hosts & ipconfig /flushdns' -Verb RunAs -Wait -WindowStyle Hidden -ErrorAction Stop }} catch {{ exit 1 }}",
         temp_file.display()
     );
 
+    // Added `.creation_flags(CREATE_NO_WINDOW)` to skip drawing the terminal!
     let status = std::process::Command::new("powershell")
-        .args(&["-NoProfile", "-Command", &script])
+        .creation_flags(CREATE_NO_WINDOW)
+        .args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script])
         .status()
         .map_err(|_| "Failed to request Administrator permissions.".to_string())?;
 
@@ -83,7 +87,7 @@ fn install_task_scheduler() {
     if let Ok(exe_path) = std::env::current_exe() {
         let path_str = exe_path.to_str().unwrap_or_default();
         let _ = std::process::Command::new("schtasks")
-            // We changed "/sc daily" to "/sc onlogon", and removed the "/st 12:00" time!
+            .creation_flags(CREATE_NO_WINDOW)
             .args(&["/create", "/tn", "LunarPatcherRefresh", "/tr", &format!("\"{}\" --refresh", path_str), "/sc", "onlogon", "/f"])
             .output();
     }
@@ -132,6 +136,8 @@ async fn add_new_account(display_name: String, skin_name: String) -> Result<Stri
 
     let mut accounts_data = json!({"activeAccountLocalId": "", "accounts": {}});
     if accounts_file.exists() {
+        // Backup the file before overwriting!
+        let _ = fs::copy(&accounts_file, accounts_file.with_extension("backup.json"));
         if let Ok(content) = fs::read_to_string(&accounts_file) {
             if let Ok(parsed) = serde_json::from_str::<Value>(&content) { accounts_data = parsed; }
         }
@@ -150,35 +156,28 @@ async fn add_new_account(display_name: String, skin_name: String) -> Result<Stri
     fs::create_dir_all(&lunar_dir).map_err(|e| e.to_string())?;
     fs::write(&accounts_file, serde_json::to_string_pretty(&accounts_data).unwrap()).map_err(|e| e.to_string())?;
 
-    // --- APPLY PATCHES (Now checks for errors and aborts if you click No!) ---
     patch_hosts_file()?;
     install_task_scheduler();
 
     Ok(format!("Added: {}", display_name))
 }
 
-// --- NEW COMMAND: REMOVE PATCHES ---
 #[tauri::command]
 fn remove_patches() -> Result<String, String> {
-    // 1. Delete Scheduled Task
     let _ = std::process::Command::new("schtasks")
+        .creation_flags(CREATE_NO_WINDOW)
         .args(&["/delete", "/tn", "LunarPatcherRefresh", "/f"])
         .output();
 
-    // 2. Clean the Hosts File
     let hosts_path = "C:\\Windows\\System32\\drivers\\etc\\hosts";
     if let Ok(content) = fs::read_to_string(hosts_path) {
         let mut new_lines = Vec::new();
         let mut skip_line = false;
         
         for line in content.lines() {
-            // Check if we hit our custom block
             if line.contains("# --- LUNAR PATCHER ---") { skip_line = true; continue; }
             if line.contains("# ---------------------") { skip_line = false; continue; }
-            
-            // Skip individual lines just in case they were added manually
             if skip_line || line.contains("lunarclient") || line.contains("xboxlive.com") || line.contains("api.minecraftservices.com") { continue; }
-            
             new_lines.push(line.to_string());
         }
 
@@ -186,14 +185,14 @@ fn remove_patches() -> Result<String, String> {
         let temp_file = std::env::temp_dir().join("lunar_unpatch.txt");
         fs::write(&temp_file, cleaned_content).map_err(|e| e.to_string())?;
 
-        // Ask for UAC to overwrite the hosts file with the cleaned version
         let script = format!(
             "try {{ Start-Process cmd -ArgumentList '/c copy /y \"{}\" C:\\Windows\\System32\\drivers\\etc\\hosts & ipconfig /flushdns' -Verb RunAs -Wait -WindowStyle Hidden -ErrorAction Stop }} catch {{ exit 1 }}",
             temp_file.display()
         );
 
         let status = std::process::Command::new("powershell")
-            .args(&["-NoProfile", "-Command", &script])
+            .creation_flags(CREATE_NO_WINDOW)
+            .args(&["-NoProfile", "-WindowStyle", "Hidden", "-Command", &script])
             .status()
             .map_err(|_| "Failed to request Administrator permissions.".to_string())?;
 
@@ -232,6 +231,7 @@ fn get_accounts() -> Result<Vec<AccountInfo>, String> {
 fn set_active_account(local_id: String) -> Result<String, String> {
     let home_dir = dirs::home_dir().unwrap();
     let file = home_dir.join(".lunarclient").join("settings").join("game").join("accounts.json");
+    if file.exists() { let _ = fs::copy(&file, file.with_extension("backup.json")); }
     let mut parsed: Value = serde_json::from_str(&fs::read_to_string(&file).unwrap()).unwrap();
     parsed["activeAccountLocalId"] = json!(local_id);
     fs::write(&file, serde_json::to_string_pretty(&parsed).unwrap()).unwrap();
@@ -242,6 +242,7 @@ fn set_active_account(local_id: String) -> Result<String, String> {
 fn remove_account(local_id: String) -> Result<String, String> {
     let home_dir = dirs::home_dir().unwrap();
     let file = home_dir.join(".lunarclient").join("settings").join("game").join("accounts.json");
+    if file.exists() { let _ = fs::copy(&file, file.with_extension("backup.json")); }
     let mut parsed: Value = serde_json::from_str(&fs::read_to_string(&file).unwrap()).unwrap();
     if let Some(accounts) = parsed["accounts"].as_object_mut() { accounts.remove(&local_id); }
     if parsed["activeAccountLocalId"] == json!(local_id) { parsed["activeAccountLocalId"] = json!(""); }
@@ -257,7 +258,6 @@ fn main() {
     }
 
     tauri::Builder::default()
-        // Registered remove_patches here!
         .invoke_handler(tauri::generate_handler![add_new_account, get_accounts, set_active_account, remove_account, remove_patches])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
