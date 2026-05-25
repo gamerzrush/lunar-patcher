@@ -1,0 +1,367 @@
+/* --- COLOR PALETTE & SETUP --- */
+:root {
+  --violet: #af5fff;
+  --violet-glow: rgba(175, 95, 255, 0.4);
+  --dark-bg: rgba(10, 10, 15, 0.95);
+  --panel-bg: rgba(20, 20, 25, 0.7);
+  --text-main: #ffffff;
+  --text-muted: #888899;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
+  /* The body background is transparent so the window can have rounded corners! */
+  background-color: transparent; 
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(175, 95, 255, 0.2); /* Subtle violet border around the whole app */
+}
+
+/* --- CUSTOM TITLE BAR --- */
+.titlebar {
+  height: 35px;
+  background: rgba(10, 10, 15, 0.98);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+}
+
+.titlebar-logo {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 2px;
+  margin-left: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ccc;
+  pointer-events: none;
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--violet);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--violet);
+}
+
+.titlebar-controls {
+  display: flex;
+  height: 100%;
+}
+
+.control-btn {
+  width: 45px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.2s;
+  color: #aaa;
+}
+
+.control-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+.close-btn:hover { background: #ff3333; color: white; }
+
+/* --- APP LAYOUT --- */
+.app-container {
+  flex: 1;
+  background-color: var(--dark-bg);
+  backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Background Glowing Orb Effect */
+.glow-orb {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: var(--violet);
+  filter: blur(150px);
+  opacity: 0.15;
+  border-radius: 50%;
+  z-index: 0;
+}
+
+/* --- MAIN MENU CARD --- */
+.main-menu {
+  z-index: 1;
+  background: var(--panel-bg);
+  padding: 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  width: 350px;
+}
+
+h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  margin: 0 0 5px 0;
+  background: linear-gradient(90deg, #fff, var(--violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+p {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+/* --- GLOWING BUTTONS --- */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+button {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  padding: 15px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.btn-number {
+  color: var(--violet);
+  font-weight: 600;
+  font-size: 14px;
+  font-family: 'Rajdhani', sans-serif;
+}
+
+.btn-text {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+button:hover {
+  background: rgba(175, 95, 255, 0.1);
+  border: 1px solid var(--violet);
+  box-shadow: 0 0 20px var(--violet-glow);
+  transform: scale(1.02);
+}
+/* --- INPUT FIELDS (TEXT BOXES) --- */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none; /* Removes the ugly default blue glow */
+  box-sizing: border-box; /* Keeps everything aligned perfectly */
+  transition: all 0.3s ease;
+}
+
+/* What happens when you click on the text box to type */
+input:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 15px var(--violet-glow);
+  background: rgba(175, 95, 255, 0.05);
+}
+
+/* Make the placeholder text slightly transparent */
+input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+/* --- SCREEN SWAP ANIMATIONS --- */
+
+/* 1. We create the blueprint for the animation */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px); /* Starts slightly lower */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);    /* Slides into its normal position */
+  }
+}
+
+/* 2. We attach the animation to both of our screens! */
+#home-view, #add-view {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* --- TOAST NOTIFICATIONS --- */
+.toast {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px); /* Hidden down below the screen */
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  z-index: 100;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none; /* So it doesn't block clicks */
+}
+
+/* When the toast is active, it slides up and fades in! */
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Red Error Theme */
+.toast.error {
+  background: rgba(255, 0, 95, 0.15);
+  border: 1px solid var(--red);
+  color: #ffb3c6;
+  box-shadow: 0 0 20px rgba(255, 0, 95, 0.4);
+}
+
+/* Green Success Theme */
+.toast.success {
+  background: rgba(135, 255, 95, 0.15);
+  border: 1px solid var(--green);
+  color: #d4ffb3;
+  box-shadow: 0 0 20px rgba(135, 255, 95, 0.4);
+}
+/* --- SCREEN 3: LIST ACCOUNTS STYLES --- */
+#list-view {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.accounts-container {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 5px;
+  /* (We removed the scroll-behavior rule so your mouse wheel flows naturally) */
+}
+
+/* Upgraded Professional Scrollbar */
+.accounts-container::-webkit-scrollbar { 
+  width: 8px; /* Slightly thicker so it's easier to grab */
+}
+
+.accounts-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03); /* Faint background track */
+  border-radius: 10px;
+}
+
+.accounts-container::-webkit-scrollbar-thumb { 
+  background: rgba(175, 95, 255, 0.5); /* Semi-transparent violet */
+  border-radius: 10px; 
+}
+
+.accounts-container::-webkit-scrollbar-thumb:hover { 
+  background: rgba(175, 95, 255, 0.9); /* Lights up when you hover over it! */
+}
+
+.account-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 15px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
+  transition: 0.2s;
+  /* THIS MAKES IT OBVIOUS YOU CAN CLICK IT */
+  cursor: pointer; 
+}
+
+.account-card:hover {
+  background: rgba(175, 95, 255, 0.1);
+  border-color: var(--violet);
+  transform: translateX(4px); /* Slides right slightly on hover! */
+}
+
+/* NEW: Style for the active card */
+.account-card.active-card {
+  border-color: var(--violet);
+  background: rgba(175, 95, 255, 0.05);
+}
+
+.account-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-name {
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.account-uuid {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 3px;
+  font-family: 'Rajdhani', monospace;
+}
+
+/* Glowing Active Badge */
+.active-badge {
+  background: rgba(135, 255, 95, 0.15);
+  color: var(--green);
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--green);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.delete-btn {
+  color: #ff3333;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: 0.2s;
+  opacity: 0.5;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 51, 51, 0.2);
+  opacity: 1;
+}
+/* --- ANIMATION FOR DELETING A CARD --- */
+.account-card.deleting {
+  transform: scale(0.8) translateX(-20px); /* Shrink and slide left */
+  opacity: 0;                              /* Fade to invisible */
+  margin-bottom: -50px;                    /* Pull the cards below it upward! */
+  pointer-events: none;
+}

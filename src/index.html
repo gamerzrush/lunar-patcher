@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NIKSHITH</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-tauri-drag-region>
+    
+    <!-- TITLE BAR -->
+    <div class="titlebar" data-tauri-drag-region>
+      <div class="titlebar-logo" data-tauri-drag-region>
+        <span class="logo-dot"></span> LUNAR PATCHER
+      </div>
+      <div class="titlebar-controls">
+        <div class="control-btn" id="minimize-btn">_</div>
+        <div class="control-btn close-btn" id="close-btn">✕</div>
+      </div>
+    </div>
+
+    <!-- MAIN APP CONTENT -->
+    <div class="app-container" data-tauri-drag-region>
+      <div class="glow-orb" data-tauri-drag-region></div>
+      
+      <!-- THIS IS THE GLASS BOX THAT ACCIDENTALLY BROKE -->
+      <div class="main-menu" data-tauri-drag-region>
+        
+        <!-- === SCREEN 1: HOME MENU === -->
+        <div id="home-view">
+          <h1 data-tauri-drag-region>NIKSHITH</h1>
+          <p data-tauri-drag-region id="status-text">SYSTEM INITIALIZED. SELECT A PROTOCOL.</p>
+          
+          <div class="button-group">
+            <button id="add-btn">
+              <span class="btn-number">01</span> <span class="btn-text">Add Account</span>
+            </button>
+            <button id="list-btn">
+              <span class="btn-number">02</span> <span class="btn-text">List Accounts</span>
+            </button>
+            <!-- New Red Cleanup Button -->
+            <button id="remove-patches-btn" style="border-color: #ff3333; margin-top: 15px;">
+              <span class="btn-number" style="color: #ff3333;">03</span> 
+              <span class="btn-text" style="color: #ff3333;">Remove System Patches</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- === SCREEN 2: ADD ACCOUNT === -->
+        <div id="add-view" style="display: none;">
+          <h1 data-tauri-drag-region>ADD ACCOUNT</h1>
+          <p data-tauri-drag-region>ENTER YOUR CREDENTIALS BELOW.</p>
+          
+          <div class="input-group">
+            <input type="text" id="display-name" placeholder="Display Username (e.g. Nikshith)" autocomplete="off">
+            <input type="text" id="skin-name" placeholder="Skin Username (Premium Account)" autocomplete="off">
+          </div>
+
+          <div class="button-group" style="margin-top: 20px;">
+            <button id="submit-account-btn">
+              <span class="btn-number">>></span> <span class="btn-text">Patch Account</span>
+            </button>
+            <button id="back-btn" style="border-color: #555;">
+              <span class="btn-number"><<</span> <span class="btn-text">Go Back</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- === SCREEN 3: LIST ACCOUNTS === -->
+        <div id="list-view" style="display: none;">
+          <h1 data-tauri-drag-region>SAVED ACCOUNTS</h1>
+          <p data-tauri-drag-region>YOUR INJECTED PROFILES.</p>
+          
+          <div id="accounts-container" class="accounts-container">
+            <!-- Account Cards go here -->
+          </div>
+
+          <div class="button-group" style="margin-top: 20px;">
+            <button id="list-back-btn" style="border-color: #555;">
+              <span class="btn-number"><<</span> <span class="btn-text">Go Back</span>
+            </button>
+          </div>
+        </div>
+
+      </div> <!-- End of glass box -->
+    </div>
+
+    <!-- CUSTOM TOAST NOTIFICATION -->
+    <div id="toast" class="toast">
+      <span id="toast-message">Placeholder</span>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
+    <!-- THE PREMIUM SCROLL ENGINE -->
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
